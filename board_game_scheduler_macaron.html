@@ -138,6 +138,8 @@
       grid-template-columns:repeat(10,minmax(0,1fr));
       background:#fff;
       border-bottom:1px solid var(--border);
+      padding-right:48px;
+      box-sizing:border-box;
       position:relative;
     }
     .time-head div{
@@ -150,14 +152,18 @@
     }
     .time-head .end-label{
       position:absolute;
-      right:4px;
+      right:10px;
       top:9px;
       padding:0;
       border-left:0;
       background:transparent;
     }
-    .track{position:relative;background:
-      repeating-linear-gradient(to right, transparent 0, transparent calc(5% - 1px), #efe8ee calc(5% - 1px), #efe8ee 5%)}
+    .track{
+      position:relative;
+      padding-right:48px;
+      box-sizing:border-box;
+      background:
+      repeating-linear-gradient(to right, transparent 0, transparent calc(10% - 1px), #efe8ee calc(10% - 1px), #efe8ee 10%)}
     .booking{
       position:absolute;top:8px;height:58px;border:0;border-radius:8px;padding:5px 8px;
       text-align:left;color:#fff;overflow:hidden;box-shadow:none
