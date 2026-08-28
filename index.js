@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { enforceHttps } = require('./api/_lib');
 
 const HTML_FILE = path.join(__dirname, 'board_game_scheduler_macaron.html');
 
@@ -20,6 +21,8 @@ function serveHtml(res) {
 }
 
 module.exports = async function handler(req, res) {
+  if (enforceHttps(req, res)) return;
+
   const url = new URL(req.url, 'http://localhost');
 
   if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/board_game_scheduler_macaron.html') {

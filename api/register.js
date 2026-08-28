@@ -8,7 +8,8 @@ const {
   createToken,
   setAuthCookie,
   readJson,
-  sendJson
+  sendJson,
+  enforceHttps
 } = require('./_lib');
 
 module.exports = async function handler(req, res) {
@@ -16,6 +17,8 @@ module.exports = async function handler(req, res) {
     sendJson(res, 405, { error: 'Method Not Allowed' }, { Allow: 'POST' });
     return;
   }
+
+  if (enforceHttps(req, res)) return;
 
   await ensureReady();
 

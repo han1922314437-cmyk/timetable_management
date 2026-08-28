@@ -5,7 +5,8 @@ const {
   normalizeString,
   getUserFromRequest,
   readJson,
-  sendJson
+  sendJson,
+  enforceHttps
 } = require('../_lib');
 
 function toBooking(row) {
@@ -24,6 +25,8 @@ function toBooking(row) {
 }
 
 module.exports = async function handler(req, res) {
+  if (enforceHttps(req, res)) return;
+
   await ensureReady();
   const user = await getUserFromRequest(req);
   const url = new URL(req.url, 'http://localhost');

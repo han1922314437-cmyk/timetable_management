@@ -116,6 +116,29 @@ function sendJson(res, statusCode, body, extraHeaders = {}) {
   res.end(JSON.stringify(body));
 }
 
+function enforceHttps(req, res) {
+  if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+    return false;
+  }
+
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
+  if (forwardedProto !== 'http') {
+    return false;
+  }
+
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const url = new URL(req.url, 'http://localhost');
+  url.protocol = 'https:';
+  if (host) {
+    url.host = host;
+  }
+
+  res.statusCode = 308;
+  res.setHeader('Location', url.toString());
+  res.end();
+  return true;
+}
+
 function setAuthCookie(res, token) {
   const parts = [
     `auth_token=${encodeURIComponent(token)}`,
@@ -213,6 +236,7 @@ module.exports = {
   parseCookies,
   readJson,
   sendJson,
+  enforceHttps,
   setAuthCookie,
   clearAuthCookie,
   getUserFromRequest,
