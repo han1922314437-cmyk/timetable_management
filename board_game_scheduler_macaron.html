@@ -135,12 +135,9 @@
     .room-label span{font-size:12px;color:var(--muted)}
     .time-head{
       display:grid;
-      grid-template-columns:repeat(10,minmax(0,1fr));
+      grid-template-columns:repeat(11,minmax(0,1fr));
       background:#fff;
       border-bottom:1px solid var(--border);
-      padding-right:48px;
-      box-sizing:border-box;
-      position:relative;
     }
     .time-head div{
       padding:9px 4px;
@@ -151,19 +148,13 @@
       white-space:nowrap;
     }
     .time-head .end-label{
-      position:absolute;
-      right:10px;
-      top:9px;
-      padding:0;
-      border-left:0;
-      background:transparent;
+      border-left:1px solid var(--border);
+      background:#fff;
     }
     .track{
       position:relative;
-      padding-right:48px;
-      box-sizing:border-box;
       background:
-      repeating-linear-gradient(to right, transparent 0, transparent calc(10% - 1px), #efe8ee calc(10% - 1px), #efe8ee 10%)}
+      repeating-linear-gradient(to right, transparent 0, transparent calc(9.090909% - 1px), #efe8ee calc(9.090909% - 1px), #efe8ee 9.090909%)}
     .booking{
       position:absolute;top:8px;height:58px;border:0;border-radius:8px;padding:5px 8px;
       text-align:left;color:#fff;overflow:hidden;box-shadow:none
@@ -681,13 +672,12 @@ function render() {
   let html = `<div class="grid-row" style="min-height:auto">
     <div class="room-label"><b>区域</b></div>
     <div class="time-head">
-      ${Array.from({length:10}, (_, i) => `<div>${String(i + 13).padStart(2, '0')}:00</div>`).join('')}
-      <div class="end-label">23:00</div>
+      ${Array.from({length:11}, (_, i) => `<div${i === 10 ? ' class="end-label"' : ''}>${String(i + 13).padStart(2, '0')}:00</div>`).join('')}
     </div>
   </div>`;
 
   const start = 13 * 60;
-  const total = 10 * 60;
+  const total = 11 * 60;
   state.rooms.forEach(r => {
     html += `<div class="grid-row">
       <div class="room-label"><b>${r.name}</b><span>${r.name === '公共区' ? '' : `${r.capacity} 人`}</span></div>
