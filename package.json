@@ -5,9 +5,18 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js"
+    "api": "node server.js",
+    "frontend": "vite",
+    "dev": "concurrently \"npm:api\" \"npm:frontend\"",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "npm run dev"
   },
   "dependencies": {
-    "pg": "^8.13.1"
+    "@vitejs/plugin-vue": "^6.0.8",
+    "concurrently": "^10.0.5",
+    "pg": "^8.13.1",
+    "vite": "^8.2.2",
+    "vue": "^3.5.42"
   }
 }

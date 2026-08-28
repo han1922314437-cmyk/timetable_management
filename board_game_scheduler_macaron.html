@@ -6,52 +6,60 @@
   <title>桌游包间预约排期</title>
   <style>
     :root{
-      --bg:#fff8f7;
-      --panel:#fffefc;
-      --panel-2:#fff9f9;
-      --text:#2f2a39;
-      --muted:#7a7287;
-      --border:#eadfe3;
-      --blue:#8cbcff;
-      --blue-2:#e7f0ff;
-      --orange:#ffc99a;
-      --green:#b7e5c4;
-      --pink:#f6c0cf;
-      --lavender:#d7c7f7;
-      --danger:#d93025;
-      --shadow:0 1px 2px rgba(143,123,165,.08),0 1px 3px rgba(143,123,165,.12);
+      --bg:#f7f7f5;
+      --panel:#ffffff;
+      --panel-2:#fbfbfa;
+      --text:#191919;
+      --muted:#6f6e69;
+      --border:#e8e7e4;
+      --blue:#4f8cc9;
+      --blue-2:#edf4fb;
+      --orange:#c78a47;
+      --green:#4f9371;
+      --pink:#e9e4dd;
+      --lavender:#efefed;
+      --danger:#d44c47;
+      --shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px rgba(15,23,42,.03);
+      --shadow-soft:0 1px 2px rgba(15,23,42,.03);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(246,192,207,.22), transparent 26%),
-        radial-gradient(circle at top right, rgba(183,229,196,.18), transparent 24%),
-        linear-gradient(180deg, var(--bg) 0%, #fffdfc 100%);
+      background:var(--bg);
       color:var(--text)
+    }
+    input:focus,select:focus,textarea:focus,button:focus-visible{
+      outline:none;
+      box-shadow:0 0 0 3px rgba(79,140,201,.14);
+      border-color:#c8d9ea;
     }
     button,input,select{font:inherit}
     button{cursor:pointer}
-    .app{max-width:1500px;margin:auto;padding:16px}
-    .topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+    .app{max-width:1480px;margin:auto;padding:20px}
+    .topbar{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
     .date-controls,.auth-panel,.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .date-controls,.auth-panel{flex:1 1 320px}
     input,select,.btn{
       border:1px solid var(--border);
       background:var(--panel);
       border-radius:8px;
-      padding:8px 10px;
-      box-shadow:none
+      padding:9px 12px;
+      box-shadow:var(--shadow-soft);
+      color:var(--text)
     }
-    .btn{transition:background .15s ease, border-color .15s ease, box-shadow .15s ease}
-    .btn:hover{background:#fff7f8;box-shadow:var(--shadow)}
+    .btn{
+      transition:background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+      font-weight:600;
+    }
+    .btn:hover{background:#f7f7f6;box-shadow:var(--shadow-soft)}
     .btn.primary{
-      background:linear-gradient(135deg, var(--pink), var(--lavender));
-      border-color:transparent;
+      background:#191919;
+      border-color:#191919;
       color:#fff;
       font-weight:700
     }
-    .btn.primary:hover{background:linear-gradient(135deg, #f2b8c9, #cdb8f4)}
+    .btn.primary:hover{background:#2a2a2a}
     .btn[disabled]{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;background:#fff}
     .icon-btn{
       display:inline-flex;
@@ -66,14 +74,14 @@
       box-shadow:none;
       color:var(--muted);
     }
-    .icon-btn:hover{background:#fff3f7;box-shadow:none}
+    .icon-btn:hover{background:#f1f1ef;box-shadow:none}
     .chip{
       display:inline-flex;align-items:center;gap:6px;
       padding:8px 10px;border-radius:8px;
-      background:#fff8fb;
+      background:#fcfcfb;
       border:1px solid var(--border);
       color:var(--muted);
-      box-shadow:none
+      box-shadow:var(--shadow-soft)
     }
     .chip.status-chip{
       gap:8px;
@@ -88,30 +96,30 @@
       flex:0 0 auto;
     }
     .chip.status-ok{
-      color:#2e7d32;
-      background:#f0fbf2;
-      border-color:#c8e6c9;
+      color:#2d6a4f;
+      background:#f4f8f5;
+      border-color:#dde9e0;
     }
     .chip.status-warn{
-      color:#9a5b00;
-      background:#fff6e8;
-      border-color:#f3d3a3;
+      color:#8a5a28;
+      background:#fbf6f0;
+      border-color:#eadacd;
     }
     .chip.status-error{
-      color:#b42318;
-      background:#fff2f4;
-      border-color:#f5c2c7;
+      color:#ab433f;
+      background:#fbf4f3;
+      border-color:#ecd7d5;
     }
-    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
     .card{
       background:var(--panel);
       border:1px solid var(--border);
       border-radius:8px;
-      padding:14px;
+      padding:16px;
       box-shadow:none
     }
-    .card .label{font-size:13px;color:var(--muted)}
-    .card .value{font-size:26px;font-weight:700;margin-top:4px}
+    .card .label{font-size:12px;color:var(--muted);letter-spacing:.03em}
+    .card .value{font-size:28px;font-weight:700;margin-top:6px;letter-spacing:-.03em}
     .timeline-card{
       background:var(--panel);
       border:1px solid var(--border);
@@ -120,28 +128,53 @@
       box-shadow:none
     }
     .timeline-head{
-      padding:12px 14px;
+      padding:14px 16px;
       border-bottom:1px solid var(--border);
       display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
-      background:linear-gradient(90deg, #fff8fb, #fbfff9)
+      background:#ffffff
+    }
+    .view-switch{
+      display:inline-flex;
+      gap:6px;
+      padding:4px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#f7f7f5;
+      box-shadow:none;
+    }
+    .view-switch .btn{
+      min-width:82px;
+      padding:8px 12px;
+      border-radius:999px;
+      border-color:transparent;
+      background:transparent;
+      color:var(--muted);
+    }
+    .view-switch .btn.active{
+      background:#ffffff;
+      color:var(--text);
+      font-weight:700;
+      border-color:var(--border);
+      box-shadow:var(--shadow-soft);
     }
     .legend{font-size:12px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
     .dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:5px}
     .scroll{overflow-x:auto}
     .timeline{min-width:1120px}
     .grid-row{display:grid;grid-template-columns:132px 1fr;min-height:60px;border-bottom:1px solid var(--border)}
-    .room-label{padding:12px;border-right:1px solid var(--border);background:#fff}
-    .room-label b{display:block}
+    .room-label{padding:14px 12px;border-right:1px solid var(--border);background:#ffffff}
+    .room-label b{display:block;font-size:18px;letter-spacing:-.02em}
     .room-label span{font-size:12px;color:var(--muted)}
     .time-head{
       display:grid;
       grid-template-columns:repeat(11,minmax(0,1fr));
-      background:#fff;
+      background:#ffffff;
       border-bottom:1px solid var(--border);
     }
     .time-head div{
-      padding:9px 4px;
-      font-size:12px;
+      padding:12px 4px;
+      font-size:13px;
+      font-weight:500;
       color:var(--muted);
       border-left:1px solid var(--border);
       text-align:center;
@@ -154,17 +187,81 @@
     .track{
       position:relative;
       background:
-      repeating-linear-gradient(to right, transparent 0, transparent calc(9.090909% - 1px), #efe8ee calc(9.090909% - 1px), #efe8ee 9.090909%)}
+      repeating-linear-gradient(to right, transparent 0, transparent calc(9.090909% - 1px), #ecebe8 calc(9.090909% - 1px), #ecebe8 9.090909%)}
     .booking{
       position:absolute;top:8px;height:58px;border:0;border-radius:8px;padding:5px 8px;
       text-align:left;color:#fff;overflow:hidden;box-shadow:none
     }
-    .booking.confirmed{background:linear-gradient(135deg, var(--blue), #a6d6ff);color:#fff}
-    .booking.pending{background:linear-gradient(135deg, var(--orange), #ffd9b8);color:#6a4f2e}
+    .booking.confirmed{background:#6f9fd1;color:#fff}
+    .booking.pending{background:#e7d7c2;color:#5f5140}
     .booking strong,.booking span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .booking span{font-size:11px;opacity:.92;margin-top:2px}
-    dialog{width:min(92vw,560px);border:1px solid var(--border);border-radius:8px;padding:0;box-shadow:var(--shadow)}
-    dialog::backdrop{background:rgba(94,76,113,.18)}
+    .list-view{
+      display:grid;
+      gap:12px;
+      padding:14px;
+      background:#fafaf9;
+    }
+    .list-room{
+      border:1px solid var(--border);
+      border-radius:8px;
+      background:#fff;
+      overflow:hidden;
+      box-shadow:none;
+    }
+    .list-room-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      background:#fbfbfa;
+      border-bottom:1px solid var(--border);
+    }
+    .list-room-head b{display:block}
+    .list-room-head span{font-size:12px;color:var(--muted)}
+    .list-bookings{
+      display:grid;
+      gap:10px;
+      padding:12px;
+    }
+    .list-booking{
+      width:100%;
+      border:1px solid transparent;
+      border-radius:8px;
+      padding:12px;
+      text-align:left;
+      background:#fff;
+      box-shadow:none;
+    }
+    .list-booking.confirmed{
+      background:#f2f7fc;
+      border-color:#d7e4f0;
+      color:#355877;
+    }
+    .list-booking.pending{
+      background:#fbf7f1;
+      border-color:#eadfd0;
+      color:#7c6448;
+    }
+    .list-booking strong,.list-booking span{
+      display:block;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .list-booking span{
+      margin-top:4px;
+      font-size:12px;
+      opacity:.9;
+    }
+    .list-empty{
+      padding:16px 14px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    dialog{width:min(92vw,560px);border:1px solid var(--border);border-radius:8px;padding:0;box-shadow:0 18px 48px rgba(15,23,42,.08)}
+    dialog::backdrop{background:rgba(15,23,42,.12);backdrop-filter:blur(2px)}
     .dialog-body{padding:16px}
     .dialog-title{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
     .dialog-title h2{margin:0}
@@ -176,7 +273,7 @@
       min-height:140px;
       resize:vertical;
       border:1px solid var(--border);
-      background:#fff;
+      background:#ffffff;
       border-radius:8px;
       padding:10px 12px;
       color:var(--text);
@@ -189,18 +286,269 @@
     .message.success{display:block;border:1px solid #c8e6c9;background:#f0fbf2;color:#2e7d32}
     .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
     .result-list{display:grid;gap:8px;margin-top:12px}
-    .result{border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;background:#fffdfd}
-    .badge{padding:4px 8px;border-radius:999px;background:#edf4ff;color:#6e9fe7;font-size:12px}
-    .auth-tabs{display:flex;gap:8px;margin-top:14px}
-    .auth-tabs .tab{flex:1}
-    .tab.active{background:linear-gradient(135deg, var(--pink), var(--lavender));border-color:transparent;color:#fff}
+    .result{border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;background:#fff;box-shadow:var(--shadow-soft)}
+    .badge{padding:4px 8px;border-radius:999px;background:#f1f3f5;color:#5f6773;font-size:12px}
+    #authDialog{
+      width:min(92vw,430px);
+      overflow:hidden;
+      background:#ffffff;
+    }
+    .auth-shell{
+      padding:0;
+      background:transparent;
+    }
+    .auth-hero{
+      position:relative;
+      padding:24px 22px 18px;
+      background:#ffffff;
+      border-bottom:1px solid var(--border);
+    }
+    .auth-mark{
+      width:48px;
+      height:48px;
+      border-radius:16px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:#191919;
+      color:#fff;
+      box-shadow:none;
+    }
+    .auth-mark svg{
+      width:24px;
+      height:24px;
+      stroke:currentColor;
+    }
+    .auth-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:14px;
+      margin-top:16px;
+    }
+    .auth-copy h2{
+      margin:0;
+      font-size:28px;
+      line-height:1.1;
+      letter-spacing:-.03em;
+    }
+    .auth-copy p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.6;
+    }
+    .auth-tabs{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-top:18px;
+      padding:4px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:#f7f7f5;
+      backdrop-filter:none;
+    }
+    .auth-tabs .tab{
+      flex:1;
+      min-height:42px;
+      border-radius:999px;
+      border-color:transparent;
+      background:transparent;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .tab.active{
+      background:#ffffff;
+      border-color:var(--border);
+      color:var(--text);
+      box-shadow:var(--shadow-soft);
+    }
+    .auth-forms{
+      padding:18px 22px 22px;
+    }
+    .auth-forms .form-grid{
+      grid-template-columns:1fr;
+      gap:14px;
+      margin-top:0;
+    }
+    .auth-field{
+      font-size:12px;
+      font-weight:700;
+      color:#6b6480;
+      letter-spacing:.02em;
+    }
+    .auth-field input{
+      width:100%;
+      margin-top:8px;
+      min-height:52px;
+      padding:14px 16px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      color:var(--text);
+      transition:border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .auth-field input::placeholder{
+      color:#b0a7bb;
+    }
+    .auth-field input:focus{
+      outline:none;
+      border-color:#c8d9ea;
+      background:#fff;
+      box-shadow:0 0 0 4px rgba(79,140,201,.12);
+    }
+    .auth-message{
+      margin-top:14px;
+    }
+    .auth-actions{
+      margin-top:18px;
+      display:grid;
+      justify-content:stretch;
+    }
+    .auth-submit{
+      width:100%;
+      min-height:52px;
+      border-radius:16px;
+      font-size:16px;
+      font-weight:800;
+      box-shadow:none;
+    }
+    .auth-note{
+      margin:12px 4px 0;
+      text-align:center;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.5;
+    }
     .auth-hint{font-size:12px;color:var(--muted);margin-top:8px}
-    .empty-state{padding:28px 20px;color:var(--muted);text-align:center}
+    .empty-state{
+      display:grid;
+      place-items:center;
+      min-height:280px;
+      padding:28px 20px;
+      color:var(--muted);
+      text-align:center;
+      background:#f8f8f7;
+    }
+    .empty-card{
+      width:min(100%, 440px);
+      padding:24px 20px;
+      border:1px solid var(--border);
+      border-radius:8px;
+      background:#fff;
+      box-shadow:none;
+    }
+    .empty-card strong{
+      display:block;
+      font-size:20px;
+      color:var(--text);
+      margin-bottom:8px;
+    }
+    .empty-card p{
+      margin:0;
+      font-size:14px;
+      line-height:1.6;
+    }
+    .empty-actions{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
     @media(max-width:720px){
       .app{padding:12px}
+      .topbar,.actions{display:grid;grid-template-columns:1fr}
+      .date-controls,.auth-panel,.actions{width:100%}
+      .date-controls .btn,.auth-panel .btn,.actions .btn,.view-switch .btn{min-height:42px}
+      .date-controls input{width:100%}
+      .auth-panel{gap:6px}
+      .chip{min-height:40px;justify-content:center}
       .cards{grid-template-columns:1fr}
+      .card{padding:12px}
+      .timeline-head{padding:10px 12px;align-items:stretch}
+      .timeline{min-width:980px}
+      .grid-row{grid-template-columns:104px 1fr;min-height:56px}
+      .room-label{padding:10px}
+      .booking{height:52px;padding:4px 7px}
+      .booking strong{font-size:13px}
+      .booking span{font-size:10px}
+      .legend{width:100%;justify-content:flex-start}
+      .view-switch{width:100%;justify-content:space-between}
+      .view-switch .btn{flex:1}
+      .list-view{padding:12px}
+      .list-room-head,.list-bookings{padding-left:10px;padding-right:10px}
+      dialog{
+        width:100vw;
+        max-width:none;
+        height:100dvh;
+        max-height:none;
+        margin:0;
+        border-radius:0;
+        border-left:0;
+        border-right:0;
+        border-bottom:0;
+      }
+      .dialog-body{
+        min-height:100dvh;
+        display:flex;
+        flex-direction:column;
+        padding:16px 14px 18px;
+      }
       .form-grid{grid-template-columns:1fr}
       .full{grid-column:auto}
+      .empty-state{
+        min-height:220px;
+        padding:18px 12px;
+      }
+      .empty-card{
+        width:100%;
+        padding:18px 14px;
+      }
+      .empty-card strong{
+        font-size:18px;
+      }
+      .empty-card p{
+        font-size:13px;
+      }
+      .empty-actions .btn{
+        flex:1 1 140px;
+      }
+      .dialog-actions{
+        margin-top:auto;
+        padding-top:14px;
+        position:sticky;
+        bottom:0;
+        background:linear-gradient(180deg, rgba(255,254,252,.75), #fffefc 26%);
+      }
+      #authDialog{background:#ffffff}
+      .auth-shell{
+        min-height:100dvh;
+        padding:0;
+      }
+      .auth-hero{
+        padding:20px 16px 16px;
+      }
+      .auth-copy h2{
+        font-size:24px;
+      }
+      .auth-copy p{
+        font-size:13px;
+      }
+      .auth-forms{
+        padding:16px 16px 20px;
+        flex:1;
+        display:flex;
+        flex-direction:column;
+      }
+      .auth-actions{
+        margin-top:auto;
+        padding-top:18px;
+        position:sticky;
+        bottom:0;
+        background:linear-gradient(180deg, rgba(255,255,255,.72), #ffffff 28%);
+      }
     }
   </style>
 </head>
@@ -208,10 +556,7 @@
 <div class="app">
   <div class="topbar">
     <div class="date-controls">
-      <button class="btn" id="prevDay">上一天</button>
       <input id="dateInput" type="date" value="2026-08-29">
-      <button class="btn" id="nextDay">下一天</button>
-      <button class="btn" id="todayBtn">今天</button>
     </div>
     <div class="auth-panel">
       <span class="chip status-chip status-warn" id="dbStatus">???????</span>
@@ -222,20 +567,23 @@
     </div>
   </div>
 
-  <div class="actions" style="margin-bottom:18px">
+  <div class="actions" id="actionsBar" style="margin-bottom:18px">
     <button class="btn" id="findBtn">查找空闲包间</button>
     <button class="btn primary" id="newBtn">+ 新增预约</button>
   </div>
 
-  <div class="cards">
+  <div class="cards" id="summaryCards">
     <div class="card"><div class="label">预约数量</div><div class="value" id="bookingCount">0</div></div>
     <div class="card"><div class="label">可用包间</div><div class="value" id="availableRooms">0</div></div>
     <div class="card"><div class="label">即将结束的预约</div><div class="value" style="font-size:20px" id="nextEnding">—</div></div>
   </div>
 
-  <div class="timeline-card">
+  <div class="timeline-card" id="timelineCard">
     <div class="timeline-head">
-      <div></div>
+      <div class="view-switch" role="tablist" aria-label="视图切换">
+        <button type="button" class="btn active" id="timelineViewBtn">时间轴</button>
+        <button type="button" class="btn" id="listViewBtn">列表</button>
+      </div>
       <div class="legend">
         <span><i class="dot" style="background:var(--blue)"></i>已确认</span>
         <span><i class="dot" style="background:var(--orange)"></i>待确认</span>
@@ -316,33 +664,50 @@
 </dialog>
 
 <dialog id="authDialog">
-  <form id="authForm" class="dialog-body">
-    <div class="dialog-title">
-      <div>
-        <h2 id="authTitle">登录</h2>
-        <p id="authHint">登录后可以保存和查看自己的预约数据。</p>
-      </div>
-      <button type="button" class="icon-btn" data-close="authDialog" aria-label="关闭" title="关闭">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false">
-          <path d="M4 4L14 14M14 4L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  <form id="authForm" class="dialog-body auth-shell">
+    <div class="auth-hero">
+      <div class="auth-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" focusable="false">
+          <path d="M7 10.5C7 7.462 9.462 5 12.5 5C15.538 5 18 7.462 18 10.5C18 13.538 15.538 16 12.5 16C9.462 16 7 13.538 7 10.5Z" stroke-width="1.7"/>
+          <path d="M4.5 19.5C6.381 17.59 9.108 16.5 12 16.5C14.892 16.5 17.619 17.59 19.5 19.5" stroke-width="1.7" stroke-linecap="round"/>
         </svg>
-      </button>
+      </div>
+      <div class="auth-title">
+        <div class="auth-copy">
+          <h2 id="authTitle">登录</h2>
+          <p id="authHint">登录后可以保存和查看自己的预约数据。</p>
+        </div>
+        <button type="button" class="icon-btn" data-close="authDialog" aria-label="关闭" title="关闭">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false">
+            <path d="M4 4L14 14M14 4L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="auth-tabs">
+        <button type="button" class="btn tab active" id="loginTab">登录</button>
+        <button type="button" class="btn tab" id="registerTab">注册</button>
+      </div>
     </div>
 
-    <div class="auth-tabs">
-      <button type="button" class="btn tab active" id="loginTab">登录</button>
-      <button type="button" class="btn tab" id="registerTab">注册</button>
-    </div>
+    <div class="auth-forms">
+      <div class="form-grid">
+        <label class="full auth-field">用户名
+          <input id="authUsername" autocomplete="username" placeholder="请输入用户名" required>
+        </label>
+        <label class="full auth-field">密码
+          <input id="authPassword" type="password" autocomplete="current-password" placeholder="请输入密码" required>
+        </label>
+        <label id="authConfirmWrap" class="full auth-field" style="display:none">确认密码
+          <input id="authPassword2" type="password" autocomplete="new-password" placeholder="请再次输入密码">
+        </label>
+      </div>
 
-    <div class="form-grid">
-      <label class="full">用户名<input id="authUsername" autocomplete="username" required></label>
-      <label>密码<input id="authPassword" type="password" autocomplete="current-password" required></label>
-      <label id="authConfirmWrap" class="full" style="display:none">确认密码<input id="authPassword2" type="password" autocomplete="new-password"></label>
-    </div>
-
-    <div id="authMessage" class="message"></div>
-    <div class="dialog-actions">
-      <button type="submit" class="btn primary" id="authSubmit">登录</button>
+      <div id="authMessage" class="message auth-message"></div>
+      <div class="auth-actions">
+        <button type="submit" class="btn primary auth-submit" id="authSubmit">登录</button>
+      </div>
+      <div class="auth-note">仅保存你的预约数据，不会在页面直接展示密码。</div>
     </div>
   </form>
 </dialog>
@@ -354,7 +719,8 @@ const state = {
   rooms: [],
   bookings: [],
   authMode: 'login',
-  editingBookingId: null
+  editingBookingId: null,
+  viewMode: window.innerWidth <= 720 ? 'list' : 'timeline'
 };
 
 const statusLabel = s => ({confirmed:'已确认', pending:'待确认'})[s] || s;
@@ -608,7 +974,9 @@ function openAuth(mode) {
   $('#authMessage').className = 'message';
   $('#authMessage').textContent = '';
   setAuthMode(mode);
-  $('#authDialog').showModal();
+  if (!$('#authDialog').open) {
+    $('#authDialog').showModal();
+  }
 }
 
 function syncAuthUI() {
@@ -619,12 +987,24 @@ function syncAuthUI() {
   $('#logoutBtn').style.display = loggedIn ? 'inline-flex' : 'none';
   $('#newBtn').disabled = !loggedIn;
   $('#findBtn').disabled = !loggedIn;
+  $('#actionsBar').style.display = loggedIn ? '' : 'none';
+  $('#summaryCards').style.display = loggedIn ? '' : 'none';
+  $('#timelineCard').style.display = loggedIn ? '' : 'none';
+
+  if (!loggedIn) {
+    openAuth('login');
+  }
 }
 
 function setDbStatus(kind, text) {
   const el = $('#dbStatus');
   el.className = `chip status-chip ${kind}`;
   el.textContent = text;
+}
+
+function syncViewSwitch() {
+  $('#timelineViewBtn').classList.toggle('active', state.viewMode === 'timeline');
+  $('#listViewBtn').classList.toggle('active', state.viewMode === 'list');
 }
 
 function populateRoomSelect() {
@@ -652,12 +1032,64 @@ async function refreshAll() {
   render();
 }
 
+function renderListView(day) {
+  return `<div class="list-view">${state.rooms.map(r => {
+    const roomBookings = day
+      .filter(b => b.roomId === r.id)
+      .sort((a, b) => toMin(a.start) - toMin(b.start));
+    return `<section class="list-room">
+      <div class="list-room-head">
+        <div><b>${r.name}</b><span>${r.name === '公共区' ? '开放座位' : `${r.capacity} 人房`}</span></div>
+        <span>${roomBookings.length ? `${roomBookings.length} 条预约` : '空闲'}</span>
+      </div>
+      ${roomBookings.length ? `<div class="list-bookings">${roomBookings.map(b => {
+        const displayPhone = b.phone || b.customer;
+        const activity = b.activity ? ` · ${b.activity}` : '';
+        return `<button type="button" class="list-booking ${b.status}" data-booking-id="${b.id}">
+          <strong>${displayPhone}</strong>
+          <span>${fmt(b.start)} - ${fmt(b.end)} · ${statusLabel(b.status)}${activity}</span>
+        </button>`;
+      }).join('')}</div>` : '<div class="list-empty">暂无预约</div>'}
+    </section>`;
+  }).join('')}</div>`;
+}
+
+function renderEmptyState(message, options = {}) {
+  const { title = '请先登录', actions = false } = options;
+  return `<div class="empty-state">
+    <div class="empty-card">
+      <strong>${title}</strong>
+      <p>${message}</p>
+      ${actions ? `<div class="empty-actions">
+        <button type="button" class="btn primary" data-empty-auth="login">登录</button>
+        <button type="button" class="btn" data-empty-auth="register">注册</button>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+function bindTimelineActions() {
+  document.querySelectorAll('[data-booking-id]').forEach(btn => {
+    btn.onclick = () => {
+      const booking = state.bookings.find(item => String(item.id) === btn.dataset.bookingId);
+      if (booking) {
+        openEditBookingDialog(booking);
+      }
+    };
+  });
+
+  document.querySelectorAll('[data-empty-auth]').forEach(btn => {
+    btn.onclick = () => openAuth(btn.dataset.emptyAuth);
+  });
+}
+
 function render() {
+  syncViewSwitch();
   if (!state.user) {
     $('#bookingCount').textContent = '0';
     $('#availableRooms').textContent = '0';
     $('#nextEnding').textContent = '—';
-    $('#timeline').innerHTML = '<div class="empty-state">请先登录后查看和管理自己的预约数据。</div>';
+    $('#timeline').innerHTML = '';
     return;
   }
 
@@ -668,6 +1100,12 @@ function render() {
 
   const ending = [...day].sort((a, b) => toMin(a.end) - toMin(b.end))[0];
   $('#nextEnding').textContent = ending ? `${state.rooms.find(r => r.id === ending.roomId)?.name || '未知包间'} · ${fmt(ending.end)}` : '—';
+
+  if (state.viewMode === 'list') {
+    $('#timeline').innerHTML = renderListView(day);
+    bindTimelineActions();
+    return;
+  }
 
   let html = `<div class="grid-row" style="min-height:auto">
     <div class="room-label"><b>区域</b></div>
@@ -697,14 +1135,7 @@ function render() {
   });
 
   $('#timeline').innerHTML = html;
-  document.querySelectorAll('.booking[data-booking-id]').forEach(btn => {
-    btn.onclick = () => {
-      const booking = state.bookings.find(item => String(item.id) === btn.dataset.bookingId);
-      if (booking) {
-        openEditBookingDialog(booking);
-      }
-    };
-  });
+  bindTimelineActions();
 }
 
 async function bootstrap() {
@@ -733,17 +1164,6 @@ async function bootstrap() {
   render();
 }
 
-function shiftDate(days) {
-  const d = new Date($('#dateInput').value + 'T00:00:00');
-  d.setDate(d.getDate() + days);
-  $('#dateInput').value = d.toISOString().slice(0, 10);
-  if (state.user) {
-    loadBookings().then(render).catch(err => alert(err.message));
-  } else {
-    render();
-  }
-}
-
 function requireLoginOrOpenAuth() {
   if (!state.user) {
     openAuth('login');
@@ -752,16 +1172,22 @@ function requireLoginOrOpenAuth() {
   return true;
 }
 
-$('#prevDay').onclick = () => shiftDate(-1);
-$('#nextDay').onclick = () => shiftDate(1);
-$('#todayBtn').onclick = () => {
-  $('#dateInput').value = '2026-08-29';
-  if (state.user) {
-    loadBookings().then(render).catch(err => alert(err.message));
-  } else {
-    render();
-  }
+$('#timelineViewBtn').onclick = () => {
+  state.viewMode = 'timeline';
+  render();
 };
+$('#listViewBtn').onclick = () => {
+  state.viewMode = 'list';
+  render();
+};
+
+window.addEventListener('resize', () => {
+  const nextMode = window.innerWidth <= 720 ? 'list' : 'timeline';
+  if (nextMode !== state.viewMode && !state.user) {
+    state.viewMode = nextMode;
+    syncViewSwitch();
+  }
+});
 $('#dateInput').onchange = () => {
   if (state.user) {
     loadBookings().then(render).catch(err => alert(err.message));
@@ -975,7 +1401,7 @@ setAuthMode('login');
 syncAuthUI();
 bootstrap().catch(err => {
   console.error(err);
-  $('#timeline').innerHTML = `<div class="empty-state">初始化失败：${err.message}</div>`;
+  $('#timeline').innerHTML = renderEmptyState(`初始化失败：${err.message}`, { title: '加载失败' });
 });
 </script>
 </body>
