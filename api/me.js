@@ -9,6 +9,6 @@ module.exports = async function handler(req, res) {
   if (enforceHttps(req, res)) return;
 
   await ensureReady();
-  const user = await getUserFromRequest(req);
+  const user = await getUserFromRequest(req, res);
   sendJson(res, 200, { user });
 };

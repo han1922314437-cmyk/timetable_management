@@ -15,6 +15,9 @@ const rooms = [
 
 const AUTH_SECRET = process.env.AUTH_SECRET || 'timetable-management-secret';
 const DATABASE_URL = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const SESSION_COOKIE_NAME = 'auth_token';
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const SESSION_RENEW_WINDOW_SECONDS = 60 * 60 * 24 * 7;
 
 let pool = globalThis.__timetablePool;
 if (!pool) {
@@ -43,32 +46,12 @@ function hashPassword(password, salt) {
   return crypto.scryptSync(password, salt, 64).toString('hex');
 }
 
-function createToken(user) {
-  const payload = {
-    uid: user.id,
-    username: user.username,
-    exp: Date.now() + 1000 * 60 * 60 * 24 * 30
-  };
-  const payloadPart = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const sig = crypto.createHmac('sha256', AUTH_SECRET).update(payloadPart).digest('base64url');
-  return `${payloadPart}.${sig}`;
+function createSessionToken() {
+  return crypto.randomBytes(32).toString('base64url');
 }
 
-function verifyToken(token) {
-  if (!token || !token.includes('.')) return null;
-  const [payloadPart, sig] = token.split('.');
-  const expected = crypto.createHmac('sha256', AUTH_SECRET).update(payloadPart).digest('base64url');
-  const sigBuf = Buffer.from(sig);
-  const expectedBuf = Buffer.from(expected);
-  if (sigBuf.length !== expectedBuf.length) return null;
-  if (!crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
-  try {
-    const payload = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf8'));
-    if (!payload.exp || Date.now() > payload.exp) return null;
-    return payload;
-  } catch {
-    return null;
-  }
+function hashSessionToken(token) {
+  return crypto.createHmac('sha256', AUTH_SECRET).update(String(token || '')).digest('hex');
 }
 
 function parseCookies(cookieHeader = '') {
@@ -141,11 +124,11 @@ function enforceHttps(req, res) {
 
 function setAuthCookie(res, token) {
   const parts = [
-    `auth_token=${encodeURIComponent(token)}`,
+    `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}`,
     'HttpOnly',
     'Path=/',
     'SameSite=Lax',
-    `Max-Age=${60 * 60 * 24 * 30}`
+    `Max-Age=${SESSION_MAX_AGE_SECONDS}`
   ];
   if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
     parts.push('Secure');
@@ -155,7 +138,7 @@ function setAuthCookie(res, token) {
 
 function clearAuthCookie(res) {
   const parts = [
-    'auth_token=',
+    `${SESSION_COOKIE_NAME}=`,
     'HttpOnly',
     'Path=/',
     'SameSite=Lax',
@@ -199,20 +182,88 @@ async function ensureReady() {
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `);
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS sessions (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          session_hash TEXT NOT NULL UNIQUE,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          expires_at TIMESTAMPTZ NOT NULL
+        )
+      `);
       await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS activity TEXT NOT NULL DEFAULT ''`);
+      await pool.query(`CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions (user_id)`);
+      await pool.query(`CREATE INDEX IF NOT EXISTS sessions_expires_at_idx ON sessions (expires_at)`);
+      await pool.query(`DELETE FROM sessions WHERE expires_at <= NOW()`);
       globalThis.__timetableInitPromise = initPromise;
     })();
   }
   await initPromise;
 }
 
-async function getUserFromRequest(req) {
+async function createSession(res, userId) {
+  await ensureReady();
+  const token = createSessionToken();
+  const sessionHash = hashSessionToken(token);
+  await pool.query(
+    `INSERT INTO sessions (user_id, session_hash, expires_at)
+     VALUES ($1, $2, NOW() + ($3 * INTERVAL '1 second'))`,
+    [userId, sessionHash, SESSION_MAX_AGE_SECONDS]
+  );
+  setAuthCookie(res, token);
+}
+
+async function destroySession(req, res) {
   await ensureReady();
   const cookies = parseCookies(req.headers.cookie || '');
-  const payload = verifyToken(cookies.auth_token);
-  if (!payload) return null;
-  const result = await pool.query('SELECT id, username FROM users WHERE id = $1', [payload.uid]);
-  return result.rows[0] || null;
+  const token = cookies[SESSION_COOKIE_NAME];
+  if (token) {
+    await pool.query('DELETE FROM sessions WHERE session_hash = $1', [hashSessionToken(token)]);
+  }
+  clearAuthCookie(res);
+}
+
+async function getUserFromRequest(req, res) {
+  await ensureReady();
+  const cookies = parseCookies(req.headers.cookie || '');
+  const token = cookies[SESSION_COOKIE_NAME];
+  if (!token) return null;
+
+  const sessionHash = hashSessionToken(token);
+  const result = await pool.query(
+    `SELECT s.id AS session_id, s.expires_at, u.id, u.username
+     FROM sessions s
+     JOIN users u ON u.id = s.user_id
+     WHERE s.session_hash = $1
+     LIMIT 1`,
+    [sessionHash]
+  );
+  const session = result.rows[0];
+  if (!session) return null;
+
+  const expiresAt = new Date(session.expires_at);
+  if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
+    await pool.query('DELETE FROM sessions WHERE id = $1', [session.session_id]);
+    if (res) clearAuthCookie(res);
+    return null;
+  }
+
+  const renewThreshold = Date.now() + SESSION_RENEW_WINDOW_SECONDS * 1000;
+  if (expiresAt.getTime() <= renewThreshold) {
+    await pool.query(
+      `UPDATE sessions
+       SET last_seen_at = NOW(),
+           expires_at = NOW() + ($2 * INTERVAL '1 second')
+       WHERE id = $1`,
+      [session.session_id, SESSION_MAX_AGE_SECONDS]
+    );
+    if (res) setAuthCookie(res, token);
+  } else {
+    await pool.query('UPDATE sessions SET last_seen_at = NOW() WHERE id = $1', [session.session_id]);
+  }
+
+  return { id: session.id, username: session.username };
 }
 
 async function getUserByUsername(username) {
@@ -232,13 +283,15 @@ module.exports = {
   normalizeUsername,
   normalizePassword,
   hashPassword,
-  createToken,
+  createSession,
+  destroySession,
   parseCookies,
   readJson,
   sendJson,
   enforceHttps,
   setAuthCookie,
   clearAuthCookie,
+  hashSessionToken,
   getUserFromRequest,
   getUserByUsername
 };

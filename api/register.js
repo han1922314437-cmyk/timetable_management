@@ -5,8 +5,7 @@ const {
   normalizeUsername,
   normalizePassword,
   hashPassword,
-  createToken,
-  setAuthCookie,
+  createSession,
   readJson,
   sendJson,
   enforceHttps
@@ -46,7 +45,7 @@ module.exports = async function handler(req, res) {
     );
 
     const user = { id: inserted.rows[0].id, username };
-    setAuthCookie(res, createToken(user));
+    await createSession(res, user.id);
     sendJson(res, 200, { user });
   } catch (error) {
     sendJson(res, 500, { error: error.message || '服务器错误' });

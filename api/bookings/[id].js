@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
   if (enforceHttps(req, res)) return;
 
   await ensureReady();
-  const user = await getUserFromRequest(req);
+  const user = await getUserFromRequest(req, res);
   const url = new URL(req.url, 'http://localhost');
   const match = url.pathname.match(/\/api\/bookings\/(\d+)$/);
   const bookingId = Number(match && match[1]);

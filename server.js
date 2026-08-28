@@ -10,6 +10,9 @@ const ROOT = __dirname;
 const HTML_FILE = path.join(ROOT, 'board_game_scheduler_macaron.html');
 const DB_FILE = path.join(ROOT, 'scheduler.sqlite');
 const AUTH_SECRET = process.env.AUTH_SECRET || 'timetable-management-local-secret';
+const SESSION_COOKIE_NAME = 'auth_token';
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const SESSION_RENEW_WINDOW_SECONDS = 60 * 60 * 24 * 7;
 
 const rooms = [
   { id: 1, name: '包间 1', capacity: 5 },
@@ -50,43 +53,34 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    session_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
 `);
 
 const bookingColumns = db.prepare("PRAGMA table_info(bookings)").all().map(row => row.name);
 if (!bookingColumns.includes('activity')) {
   db.exec("ALTER TABLE bookings ADD COLUMN activity TEXT NOT NULL DEFAULT ''");
 }
+db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run();
 
 function hashPassword(password, salt) {
   return crypto.scryptSync(password, salt, 64).toString('hex');
 }
 
-function createToken(user) {
-  const payload = {
-    uid: user.id,
-    username: user.username,
-    exp: Date.now() + 1000 * 60 * 60 * 24 * 30
-  };
-  const payloadPart = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const sig = crypto.createHmac('sha256', AUTH_SECRET).update(payloadPart).digest('base64url');
-  return `${payloadPart}.${sig}`;
+function createSessionToken() {
+  return crypto.randomBytes(32).toString('base64url');
 }
 
-function verifyToken(token) {
-  if (!token || !token.includes('.')) return null;
-  const [payloadPart, sig] = token.split('.');
-  const expected = crypto.createHmac('sha256', AUTH_SECRET).update(payloadPart).digest('base64url');
-  const sigBuf = Buffer.from(sig);
-  const expectedBuf = Buffer.from(expected);
-  if (sigBuf.length !== expectedBuf.length) return null;
-  if (!crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
-  try {
-    const payload = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf8'));
-    if (!payload.exp || Date.now() > payload.exp) return null;
-    return payload;
-  } catch {
-    return null;
-  }
+function hashSessionToken(token) {
+  return crypto.createHmac('sha256', AUTH_SECRET).update(String(token || '')).digest('hex');
 }
 
 function parseCookies(cookieHeader = '') {
@@ -138,14 +132,58 @@ function readJson(req) {
   });
 }
 
-function getUserFromRequest(req) {
-  const cookies = parseCookies(req.headers.cookie || '');
-  const token = cookies.auth_token;
-  const payload = verifyToken(token);
-  if (!payload) return null;
+function createSession(res, userId) {
+  const token = createSessionToken();
+  const sessionHash = hashSessionToken(token);
+  db.prepare(`
+    INSERT INTO sessions (user_id, session_hash, expires_at)
+    VALUES (?, ?, datetime('now', ?))
+  `).run(userId, sessionHash, `+${SESSION_MAX_AGE_SECONDS} seconds`);
+  setAuthCookie(res, token);
+}
 
-  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(payload.uid);
-  return user || null;
+function destroySession(req, res) {
+  const cookies = parseCookies(req.headers.cookie || '');
+  const token = cookies[SESSION_COOKIE_NAME];
+  if (token) {
+    db.prepare('DELETE FROM sessions WHERE session_hash = ?').run(hashSessionToken(token));
+  }
+  clearAuthCookie(res);
+}
+
+function getUserFromRequest(req, res) {
+  const cookies = parseCookies(req.headers.cookie || '');
+  const token = cookies[SESSION_COOKIE_NAME];
+  if (!token) return null;
+
+  const session = db.prepare(`
+    SELECT s.id AS session_id, s.expires_at, u.id, u.username
+    FROM sessions s
+    JOIN users u ON u.id = s.user_id
+    WHERE s.session_hash = ?
+  `).get(hashSessionToken(token));
+  if (!session) return null;
+
+  const expiresAt = Date.parse(`${session.expires_at}Z`);
+  if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+    db.prepare('DELETE FROM sessions WHERE id = ?').run(session.session_id);
+    if (res) clearAuthCookie(res);
+    return null;
+  }
+
+  if (expiresAt <= Date.now() + SESSION_RENEW_WINDOW_SECONDS * 1000) {
+    db.prepare(`
+      UPDATE sessions
+      SET last_seen_at = CURRENT_TIMESTAMP,
+          expires_at = datetime('now', ?)
+      WHERE id = ?
+    `).run(`+${SESSION_MAX_AGE_SECONDS} seconds`, session.session_id);
+    if (res) setAuthCookie(res, token);
+  } else {
+    db.prepare('UPDATE sessions SET last_seen_at = CURRENT_TIMESTAMP WHERE id = ?').run(session.session_id);
+  }
+
+  return { id: session.id, username: session.username };
 }
 
 function getUserByUsername(username) {
@@ -207,12 +245,12 @@ function jsonResponse(res, statusCode, body, extraHeaders = {}) {
 }
 
 function setAuthCookie(res, token) {
-  const cookie = `auth_token=${encodeURIComponent(token)}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+  const cookie = `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${SESSION_MAX_AGE_SECONDS}`;
   res.setHeader('Set-Cookie', cookie);
 }
 
 function clearAuthCookie(res) {
-  const cookie = 'auth_token=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0';
+  const cookie = `${SESSION_COOKIE_NAME}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`;
   res.setHeader('Set-Cookie', cookie);
 }
 
@@ -249,7 +287,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (method === 'GET' && url.pathname === '/api/me') {
-      const user = getUserFromRequest(req);
+      const user = getUserFromRequest(req, res);
       jsonResponse(res, 200, { user });
       return;
     }
@@ -272,8 +310,7 @@ const server = http.createServer(async (req, res) => {
       const passwordHash = hashPassword(password, salt);
       const info = insertUser.run(username, salt, passwordHash);
       const user = { id: Number(info.lastInsertRowid), username };
-      const token = createToken(user);
-      setAuthCookie(res, token);
+      createSession(res, user.id);
       jsonResponse(res, 200, { user });
       return;
     }
@@ -298,19 +335,18 @@ const server = http.createServer(async (req, res) => {
       }
 
       const user = { id: userRow.id, username: userRow.username };
-      const token = createToken(user);
-      setAuthCookie(res, token);
+      createSession(res, user.id);
       jsonResponse(res, 200, { user });
       return;
     }
 
     if (method === 'POST' && url.pathname === '/api/logout') {
-      clearAuthCookie(res);
+      destroySession(req, res);
       jsonResponse(res, 200, { ok: true });
       return;
     }
 
-    const user = getUserFromRequest(req);
+    const user = getUserFromRequest(req, res);
 
     if (method === 'GET' && url.pathname === '/api/bookings') {
       if (!user) {

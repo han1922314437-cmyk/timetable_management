@@ -1,4 +1,4 @@
-const { clearAuthCookie, sendJson, enforceHttps } = require('./_lib');
+const { destroySession, sendJson, enforceHttps } = require('./_lib');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,6 +8,6 @@ module.exports = async function handler(req, res) {
 
   if (enforceHttps(req, res)) return;
 
-  clearAuthCookie(res);
+  await destroySession(req, res);
   sendJson(res, 200, { ok: true });
 };
