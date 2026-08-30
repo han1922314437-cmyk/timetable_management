@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { enforceHttps } = require('./api/_lib');
 
-const HTML_FILE = path.join(__dirname, 'board_game_scheduler_macaron.html');
+const HTML_FILE = path.join(__dirname, 'index.html');
 
 const routes = {
   '/api/health': require('./api/health'),

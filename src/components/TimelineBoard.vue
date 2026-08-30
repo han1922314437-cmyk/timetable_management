@@ -43,6 +43,19 @@ function bookingStyle(booking) {
 function bookingPhone(booking) {
   return booking.phone || booking.customer || '未填写';
 }
+
+function bookingMeta(booking) {
+  const parts = [];
+  if (booking.deposit) parts.push('定金已付');
+  if (booking.activity) parts.push(booking.activity);
+  return parts.join(' · ');
+}
+
+function bookingTitle(booking) {
+  const meta = bookingMeta(booking);
+  const depositText = booking.deposit ? '定金已付' : '定金未付';
+  return `${bookingPhone(booking)} · ${fmt(booking.start)} - ${fmt(booking.end)} · ${booking.pax} 人 · ${depositText}${meta ? ` · ${meta}` : ''}`;
+}
 </script>
 
 <template>
@@ -62,17 +75,22 @@ function bookingPhone(booking) {
     <div v-if="viewMode === 'list'" class="list-view">
       <section v-for="room in roomsWithBookings" :key="room.id" class="list-room">
         <div class="list-room-head">
-          <div>
+          <div class="list-room-title">
             <b>{{ room.displayName }}</b>
             <span>{{ room.secondary }}</span>
           </div>
-          <span>{{ room.bookings.length ? `${room.bookings.length} 条预约` : '空闲' }}</span>
+          <span class="room-count" :class="{ empty: !room.bookings.length }">
+            {{ room.bookings.length ? `${room.bookings.length} 条预约` : '空闲' }}
+          </span>
         </div>
 
         <div v-if="room.bookings.length" class="list-bookings">
           <button v-for="booking in room.bookings" :key="booking.id" type="button" :class="['list-booking', booking.status]" @click="emit('edit', booking)">
             <strong>{{ bookingPhone(booking) }}</strong>
-            <span>{{ fmt(booking.start) }} - {{ fmt(booking.end) }} · {{ statusLabel(booking.status) }}<template v-if="booking.activity"> · {{ booking.activity }}</template></span>
+            <span>
+              {{ fmt(booking.start) }} - {{ fmt(booking.end) }} · {{ statusLabel(booking.status) }}
+              <template v-if="bookingMeta(booking)"> · {{ bookingMeta(booking) }}</template>
+            </span>
           </button>
         </div>
 
@@ -102,11 +120,14 @@ function bookingPhone(booking) {
               type="button"
               :class="['booking', booking.status]"
               :style="bookingStyle(booking)"
-              :title="`${bookingPhone(booking)} · ${fmt(booking.start)} - ${fmt(booking.end)} · ${booking.pax} 人`"
+              :title="bookingTitle(booking)"
               @click="emit('edit', booking)"
             >
               <strong>{{ bookingPhone(booking) }}</strong>
-              <span>{{ fmt(booking.start) }} - {{ fmt(booking.end) }} · {{ statusLabel(booking.status) }}<template v-if="booking.activity"> · {{ booking.activity }}</template></span>
+              <span>
+                {{ fmt(booking.start) }} - {{ fmt(booking.end) }} · {{ statusLabel(booking.status) }}
+                <template v-if="bookingMeta(booking)"> · {{ bookingMeta(booking) }}</template>
+              </span>
             </button>
           </div>
         </div>

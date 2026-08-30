@@ -45,7 +45,7 @@ const emit = defineEmits(['update:modelValue', 'update:parseInput', 'submit', 'd
         </div>
         <button type="button" class="icon-btn" aria-label="关闭" title="关闭" @click="emit('update:modelValue', false)">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" focusable="false">
-            <path d="M4 4L14 14M14 4L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M4 4L14 14M14 4L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
           </svg>
         </button>
       </div>
@@ -110,6 +110,19 @@ const emit = defineEmits(['update:modelValue', 'update:parseInput', 'submit', 'd
             <option value="confirmed">已确认</option>
             <option value="pending">待确认</option>
           </select>
+        </label>
+
+        <label class="full">
+          定金
+          <select v-model="form.deposit">
+            <option :value="false">未付</option>
+            <option :value="true">已付</option>
+          </select>
+        </label>
+
+        <label class="full">
+          备注（选填）
+          <textarea v-model="form.note" rows="3" placeholder="填写给自己看的自定义备注" />
         </label>
       </div>
 

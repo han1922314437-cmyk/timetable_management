@@ -7,7 +7,7 @@ const { DatabaseSync } = require('node:sqlite');
 const PORT = Number(process.env.PORT || 3001);
 const HOST = process.env.HOST || '127.0.0.1';
 const ROOT = __dirname;
-const HTML_FILE = path.join(ROOT, 'board_game_scheduler_macaron.html');
+const HTML_FILE = path.join(ROOT, 'index.html');
 const DB_FILE = path.join(ROOT, 'scheduler.sqlite');
 const AUTH_SECRET = process.env.AUTH_SECRET || 'timetable-management-local-secret';
 const SESSION_COOKIE_NAME = 'auth_token';
@@ -50,6 +50,8 @@ db.exec(`
     end_time TEXT NOT NULL,
     pax INTEGER NOT NULL,
     status TEXT NOT NULL,
+    deposit INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
@@ -68,6 +70,12 @@ db.exec(`
 const bookingColumns = db.prepare("PRAGMA table_info(bookings)").all().map(row => row.name);
 if (!bookingColumns.includes('activity')) {
   db.exec("ALTER TABLE bookings ADD COLUMN activity TEXT NOT NULL DEFAULT ''");
+}
+if (!bookingColumns.includes('deposit')) {
+  db.exec('ALTER TABLE bookings ADD COLUMN deposit INTEGER NOT NULL DEFAULT 0');
+}
+if (!bookingColumns.includes('note')) {
+  db.exec("ALTER TABLE bookings ADD COLUMN note TEXT NOT NULL DEFAULT ''");
 }
 db.prepare("DELETE FROM sessions WHERE expires_at <= datetime('now')").run();
 
@@ -191,7 +199,7 @@ function getUserByUsername(username) {
 }
 
 const getBookingsByDate = db.prepare(`
-  SELECT id, date, room_id AS roomId, activity, customer, phone, start_time AS start, end_time AS end, pax, status
+  SELECT id, date, room_id AS roomId, activity, customer, phone, start_time AS start, end_time AS end, pax, status, deposit, note
   FROM bookings
   WHERE user_id = ? AND date = ?
   ORDER BY start_time, room_id, id
@@ -199,13 +207,13 @@ const getBookingsByDate = db.prepare(`
 
 const insertBooking = db.prepare(`
   INSERT INTO bookings
-    (user_id, date, room_id, activity, customer, phone, start_time, end_time, pax, status)
+    (user_id, date, room_id, activity, customer, phone, start_time, end_time, pax, status, deposit, note)
   VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
 const getBookingById = db.prepare(`
-  SELECT id, date, room_id AS roomId, activity, customer, phone, start_time AS start, end_time AS end, pax, status
+  SELECT id, date, room_id AS roomId, activity, customer, phone, start_time AS start, end_time AS end, pax, status, deposit, note
   FROM bookings
   WHERE id = ? AND user_id = ?
 `);
@@ -226,7 +234,7 @@ const conflictCheckExcludeId = db.prepare(`
 
 const updateBooking = db.prepare(`
   UPDATE bookings
-  SET date = ?, room_id = ?, activity = ?, customer = ?, phone = ?, start_time = ?, end_time = ?, pax = ?, status = ?
+  SET date = ?, room_id = ?, activity = ?, customer = ?, phone = ?, start_time = ?, end_time = ?, pax = ?, status = ?, deposit = ?, note = ?
   WHERE id = ? AND user_id = ?
 `);
 
@@ -276,7 +284,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (method === 'GET' && url.pathname === '/board_game_scheduler_macaron.html') {
+    if (method === 'GET' && (url.pathname === '/index.html' || url.pathname === '/board_game_scheduler_macaron.html')) {
       serveHtml(res);
       return;
     }
@@ -379,6 +387,8 @@ const server = http.createServer(async (req, res) => {
       const roomId = Number(body.roomId);
       const pax = Number(body.pax);
       const status = body.status === 'pending' ? 'pending' : 'confirmed';
+      const deposit = !!body.deposit;
+      const note = normalizeString(body.note);
 
       if (!date || !phone || !start || !end || !Number.isInteger(roomId) || !Number.isFinite(pax)) {
         jsonResponse(res, 400, { error: '请完整填写预约信息。' });
@@ -405,7 +415,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const info = insertBooking.run(user.id, date, roomId, activity, customer, phone, start, end, pax, status);
+      const info = insertBooking.run(user.id, date, roomId, activity, customer, phone, start, end, pax, status, deposit, note);
       jsonResponse(res, 200, {
         booking: {
           id: Number(info.lastInsertRowid),
@@ -417,7 +427,9 @@ const server = http.createServer(async (req, res) => {
           start,
           end,
           pax,
-          status
+          status,
+          deposit,
+          note
         }
       });
       return;
@@ -461,6 +473,8 @@ const server = http.createServer(async (req, res) => {
       const roomId = Number(body.roomId);
       const pax = Number(body.pax);
       const status = body.status === 'pending' ? 'pending' : 'confirmed';
+      const deposit = !!body.deposit;
+      const note = normalizeString(body.note);
 
       if (!date || !phone || !start || !end || !Number.isInteger(roomId) || !Number.isFinite(pax)) {
         jsonResponse(res, 400, { error: '请完整填写预约信息。' });
@@ -487,7 +501,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      updateBooking.run(date, roomId, activity, customer, phone, start, end, pax, status, bookingId, user.id);
+      updateBooking.run(date, roomId, activity, customer, phone, start, end, pax, status, deposit, note, bookingId, user.id);
       jsonResponse(res, 200, {
         booking: {
           id: bookingId,
@@ -499,7 +513,9 @@ const server = http.createServer(async (req, res) => {
           start,
           end,
           pax,
-          status
+          status,
+          deposit,
+          note
         }
       });
       return;

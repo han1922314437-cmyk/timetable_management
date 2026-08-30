@@ -20,7 +20,9 @@ function toBooking(row) {
     start: row.start_time,
     end: row.end_time,
     pax: row.pax,
-    status: row.status
+    status: row.status,
+    deposit: !!row.deposit,
+    note: row.note || ''
   };
 }
 
@@ -44,7 +46,7 @@ module.exports = async function handler(req, res) {
 
   if (req.method === 'GET') {
     const result = await pool.query(
-      `SELECT id, date, room_id, activity, customer, phone, start_time, end_time, pax, status
+      `SELECT id, date, room_id, activity, customer, phone, start_time, end_time, pax, status, deposit, note
        FROM bookings
        WHERE id = $1 AND user_id = $2`,
       [bookingId, user.id]
@@ -78,6 +80,8 @@ module.exports = async function handler(req, res) {
     const roomId = Number(body.roomId);
     const pax = Number(body.pax);
     const status = body.status === 'pending' ? 'pending' : 'confirmed';
+    const deposit = !!body.deposit;
+    const note = normalizeString(body.note);
 
     if (!date || !phone || !start || !end || !Number.isInteger(roomId) || !Number.isFinite(pax)) {
       sendJson(res, 400, { error: '请完整填写预约信息。' });
@@ -114,9 +118,9 @@ module.exports = async function handler(req, res) {
     await pool.query(
       `UPDATE bookings
        SET date = $1, room_id = $2, activity = $3, customer = $4, phone = $5,
-           start_time = $6, end_time = $7, pax = $8, status = $9
-       WHERE id = $10 AND user_id = $11`,
-      [date, roomId, activity, customer, phone, start, end, pax, status, bookingId, user.id]
+           start_time = $6, end_time = $7, pax = $8, status = $9, deposit = $10, note = $11
+       WHERE id = $12 AND user_id = $13`,
+      [date, roomId, activity, customer, phone, start, end, pax, status, deposit, note, bookingId, user.id]
     );
 
     sendJson(res, 200, {
@@ -130,7 +134,9 @@ module.exports = async function handler(req, res) {
         start,
         end,
         pax,
-        status
+        status,
+        deposit,
+        note
       }
     });
     return;

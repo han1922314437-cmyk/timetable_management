@@ -179,6 +179,8 @@ async function ensureReady() {
           end_time TEXT NOT NULL,
           pax INTEGER NOT NULL,
           status TEXT NOT NULL,
+          deposit BOOLEAN NOT NULL DEFAULT FALSE,
+          note TEXT NOT NULL DEFAULT '',
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `);
@@ -193,6 +195,8 @@ async function ensureReady() {
         )
       `);
       await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS activity TEXT NOT NULL DEFAULT ''`);
+      await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS deposit BOOLEAN NOT NULL DEFAULT FALSE`);
+      await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT ''`);
       await pool.query(`CREATE INDEX IF NOT EXISTS sessions_user_id_idx ON sessions (user_id)`);
       await pool.query(`CREATE INDEX IF NOT EXISTS sessions_expires_at_idx ON sessions (expires_at)`);
       await pool.query(`DELETE FROM sessions WHERE expires_at <= NOW()`);

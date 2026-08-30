@@ -20,7 +20,9 @@ function toBooking(row) {
     start: row.start_time,
     end: row.end_time,
     pax: row.pax,
-    status: row.status
+    status: row.status,
+    deposit: !!row.deposit,
+    note: row.note || ''
   };
 }
 
@@ -44,7 +46,7 @@ module.exports = async function handler(req, res) {
     }
 
     const result = await pool.query(
-      `SELECT id, date, room_id, activity, customer, phone, start_time, end_time, pax, status
+      `SELECT id, date, room_id, activity, customer, phone, start_time, end_time, pax, status, deposit, note
        FROM bookings
        WHERE user_id = $1 AND date = $2
        ORDER BY start_time, room_id, id`,
@@ -70,6 +72,8 @@ module.exports = async function handler(req, res) {
     const roomId = Number(body.roomId);
     const pax = Number(body.pax);
     const status = body.status === 'pending' ? 'pending' : 'confirmed';
+    const deposit = !!body.deposit;
+    const note = normalizeString(body.note);
 
     if (!date || !phone || !start || !end || !Number.isInteger(roomId) || !Number.isFinite(pax)) {
       sendJson(res, 400, { error: '请完整填写预约信息。' });
@@ -105,11 +109,11 @@ module.exports = async function handler(req, res) {
 
     const inserted = await pool.query(
       `INSERT INTO bookings
-         (user_id, date, room_id, activity, customer, phone, start_time, end_time, pax, status)
+         (user_id, date, room_id, activity, customer, phone, start_time, end_time, pax, status, deposit, note)
        VALUES
-         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING id`,
-      [user.id, date, roomId, activity, customer, phone, start, end, pax, status]
+      [user.id, date, roomId, activity, customer, phone, start, end, pax, status, deposit, note]
     );
 
     sendJson(res, 200, {
@@ -123,7 +127,9 @@ module.exports = async function handler(req, res) {
         start,
         end,
         pax,
-        status
+        status,
+        deposit,
+        note
       }
     });
     return;

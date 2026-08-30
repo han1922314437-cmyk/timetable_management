@@ -19,6 +19,10 @@ body,
   min-height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -344,15 +348,46 @@ textarea {
 .list-room-head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: #fbfbfa;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #fdfdfc 0%, #f7f7f5 100%);
   border-bottom: 1px solid var(--border);
 }
 
-.list-room-head span {
+.list-room-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.list-room-title b {
+  font-size: 18px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.list-room-title span {
   font-size: 12px;
+  color: var(--muted);
+}
+
+.room-count {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef4fb;
+  border: 1px solid #d8e3ef;
+  color: #40627f;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.room-count.empty {
+  background: #f1f3f5;
+  border-color: #e3e5e8;
   color: var(--muted);
 }
 
@@ -460,6 +495,24 @@ label textarea {
 }
 
 .full { grid-column: 1 / -1; }
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.checkbox-field input {
+  width: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.checkbox-field span {
+  margin-top: 0;
+  line-height: 1.3;
+}
 
 .message {
   margin-top: 10px;
@@ -637,6 +690,12 @@ label textarea {
   .topbar, .actions { display: grid; grid-template-columns: 1fr; }
   .date-controls, .auth-panel, .actions { width: 100%; }
   .date-controls input, .auth-panel .btn, .actions .btn, .view-switch .btn { width: 100%; min-height: 42px; }
+  input,
+  select,
+  textarea,
+  .btn {
+    font-size: 16px;
+  }
   .auth-panel { gap: 6px; }
   .chip { justify-content: center; }
   .cards { grid-template-columns: 1fr; }
@@ -652,6 +711,17 @@ label textarea {
   .view-switch .btn { flex: 1; }
   .list-view { padding: 12px; }
   .list-room-head, .list-bookings { padding-left: 10px; padding-right: 10px; }
+  .list-room-head {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  .list-room-title b {
+    font-size: 17px;
+  }
+  .room-count {
+    padding: 4px 9px;
+    font-size: 11px;
+  }
   .app-dialog {
     width: 100vw;
     max-width: none;
@@ -671,6 +741,10 @@ label textarea {
   }
   .form-grid { grid-template-columns: 1fr; }
   .full { grid-column: auto; }
+  .checkbox-field {
+    align-items: center;
+    padding-top: 0;
+  }
   .dialog-actions {
     margin-top: auto;
     padding-top: 14px;
