@@ -83,12 +83,12 @@ const emit = defineEmits(['update:modelValue', 'update:parseInput', 'submit', 'd
 
         <label>
           开始时间
-          <input v-model="form.start" type="time" min="13:00" max="23:00" step="1800" required />
+          <input v-model="form.start" type="time" min="12:00" max="23:00" step="1800" required />
         </label>
 
         <label>
           结束时间
-          <input v-model="form.end" type="time" min="13:00" max="23:00" step="1800" required />
+          <input v-model="form.end" type="time" min="12:00" max="23:00" step="1800" required />
         </label>
 
         <label>

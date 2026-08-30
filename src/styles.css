@@ -281,7 +281,7 @@ textarea {
 
 .time-head {
   display: grid;
-  grid-template-columns: repeat(11, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   background: #ffffff;
 }
 
@@ -297,7 +297,7 @@ textarea {
 
 .track {
   position: relative;
-  background: repeating-linear-gradient(to right, transparent 0, transparent calc(9.090909% - 1px), #ecebe8 calc(9.090909% - 1px), #ecebe8 9.090909%);
+  background: repeating-linear-gradient(to right, transparent 0, transparent calc(8.333333% - 1px), #ecebe8 calc(8.333333% - 1px), #ecebe8 8.333333%);
 }
 
 .booking {

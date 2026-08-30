@@ -409,10 +409,12 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const conflict = conflictCheck.get(user.id, date, roomId, start, end);
-      if (conflict) {
-        jsonResponse(res, 409, { error: '这个时间段已经有预约了。' });
-        return;
+      if (roomId !== 9) {
+        const conflict = conflictCheck.get(user.id, date, roomId, start, end);
+        if (conflict) {
+          jsonResponse(res, 409, { error: '这个时间段已经有预约了。' });
+          return;
+        }
       }
 
       const info = insertBooking.run(user.id, date, roomId, activity, customer, phone, start, end, pax, status, deposit, note);
@@ -495,10 +497,12 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const conflict = conflictCheckExcludeId.get(user.id, date, roomId, bookingId, start, end);
-      if (conflict) {
-        jsonResponse(res, 409, { error: '这个时间段已经有预约了。' });
-        return;
+      if (roomId !== 9) {
+        const conflict = conflictCheckExcludeId.get(user.id, date, roomId, bookingId, start, end);
+        if (conflict) {
+          jsonResponse(res, 409, { error: '这个时间段已经有预约了。' });
+          return;
+        }
       }
 
       updateBooking.run(date, roomId, activity, customer, phone, start, end, pax, status, deposit, note, bookingId, user.id);

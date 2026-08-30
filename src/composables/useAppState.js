@@ -17,7 +17,7 @@ export function useAppState({ user }) {
   );
   const bookingCount = computed(() => dayBookings.value.length);
   const availableRoomCount = computed(() =>
-    rooms.value.filter(room => !dayBookings.value.some(booking => booking.roomId === room.id)).length
+    rooms.value.filter(room => room.id === 9 || !dayBookings.value.some(booking => booking.roomId === room.id)).length
   );
   const nextEnding = computed(() => {
     const ending = [...dayBookings.value].sort((a, b) => toMin(a.end) - toMin(b.end))[0];

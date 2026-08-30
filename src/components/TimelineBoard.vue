@@ -19,8 +19,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:viewMode', 'edit']);
 
-const timelineStart = 13 * 60;
-const totalMinutes = 11 * 60;
+const timelineStart = 12 * 60;
+const totalMinutes = 12 * 60;
 
 const roomsWithBookings = computed(() =>
   props.rooms.map(room => ({

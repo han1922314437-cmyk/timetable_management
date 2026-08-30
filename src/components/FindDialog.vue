@@ -42,12 +42,12 @@ const emit = defineEmits(['update:modelValue', 'submit']);
       <div class="form-grid">
         <label>
           开始时间
-          <input v-model="form.start" type="time" min="13:00" max="23:00" step="1800" />
+          <input v-model="form.start" type="time" min="12:00" max="23:00" step="1800" />
         </label>
 
         <label>
           结束时间
-          <input v-model="form.end" type="time" min="13:00" max="23:00" step="1800" />
+          <input v-model="form.end" type="time" min="12:00" max="23:00" step="1800" />
         </label>
 
         <label class="full">

@@ -1,4 +1,4 @@
-export const HOURS = Array.from({ length: 11 }, (_, index) => 13 + index);
+export const HOURS = Array.from({ length: 12 }, (_, index) => 12 + index);
 
 export function todayIso() {
   const now = new Date();
@@ -109,7 +109,9 @@ function parseDateText(raw) {
   const value = String(raw || '').replace(/\s+/g, '');
   if (!value) return '';
 
-  const match = value.match(/^(\d{1,4})[\/.\-年](\d{1,2})[\/.\-月](\d{1,4})$/) || value.match(/^(\d{1,4})[\/.\-](\d{1,2})[\/.\-](\d{1,4})$/);
+  const match =
+    value.match(/^(\d{1,4})[\/.\-年](\d{1,2})[\/.\-月](\d{1,4})$/) ||
+    value.match(/^(\d{1,4})[\/.\-](\d{1,2})[\/.\-](\d{1,4})$/);
   if (!match) return '';
 
   const a = Number(match[1]);
@@ -208,7 +210,7 @@ function parseAppointmentTime(text, durationInfo) {
 
   const lower = normalized.toLowerCase();
   if (lower.includes('unlimited') || lower.includes('无限') || lower.includes('不限')) {
-    return { start: '13:00', end: '23:00', note: '已识别为不限时，默认填入 13:00 - 23:00。' };
+    return { start: '12:00', end: '23:00', note: '已识别为不限时，默认填入 12:00 - 23:00。' };
   }
 
   const rangeMatch = normalized.match(/(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s*(?:-|~|至|to)\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);

@@ -94,17 +94,19 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const conflict = await pool.query(
-      `SELECT id
-       FROM bookings
-       WHERE user_id = $1 AND date = $2 AND room_id = $3
-         AND NOT (end_time <= $4 OR start_time >= $5)
-       LIMIT 1`,
-      [user.id, date, roomId, start, end]
-    );
-    if (conflict.rowCount > 0) {
-      sendJson(res, 409, { error: '这个时间段已经有预约了。' });
-      return;
+    if (roomId !== 9) {
+      const conflict = await pool.query(
+        `SELECT id
+         FROM bookings
+         WHERE user_id = $1 AND date = $2 AND room_id = $3
+           AND NOT (end_time <= $4 OR start_time >= $5)
+         LIMIT 1`,
+        [user.id, date, roomId, start, end]
+      );
+      if (conflict.rowCount > 0) {
+        sendJson(res, 409, { error: '这个时间段已经有预约了。' });
+        return;
+      }
     }
 
     const inserted = await pool.query(

@@ -30,7 +30,7 @@ export function useRoomSearch({ rooms, dayBookings, requireLogin }) {
 
     const available = rooms.value.filter(room =>
       room.capacity >= Number(findForm.pax) &&
-      !dayBookings.value.some(booking => booking.roomId === room.id && overlap(findForm.start, findForm.end, booking.start, booking.end))
+      (room.id === 9 || !dayBookings.value.some(booking => booking.roomId === room.id && overlap(findForm.start, findForm.end, booking.start, booking.end)))
     );
 
     findResults.value = available;
